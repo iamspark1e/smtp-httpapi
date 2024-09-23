@@ -1,0 +1,7 @@
+config.yml
+.github
+tsconfig.json
+src
+README.md
+docker-compose.yml
+.gitignore

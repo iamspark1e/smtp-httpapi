@@ -1,0 +1,10 @@
+name: smtp-httpapi
+services:
+  core:
+    container_name: smtp-httpapi
+    image: "ghcr.io/iamspark1e/smtp-httpapi:latest"
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./config.yml:/app/config.yml"
