@@ -3,12 +3,12 @@ import { readFileSync } from 'fs';
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import yaml from 'yaml'
-import { GlobalConfigSchema, SendMailSchema, SendMailWithAttType } from './types';
+import { GlobalConfigSchema, SendMailSchema, SendMailWithAttType } from './types.js';
 import * as v from 'valibot'
-import WrappedNodeMailer from './nodemailer';
-import { getRealRemoteIp } from './utils/access';
-import { customLogger } from './utils/logger';
-import { removeNestedNullUndefined } from './utils/tool'
+import WrappedNodeMailer from './nodemailer.js';
+import { getRealRemoteIp } from './utils/access.js';
+import { customLogger } from './utils/logger.js';
+import { removeNestedNullUndefined } from './utils/tool.js'
 
 const app = new Hono()
 app.use(logger(customLogger))
