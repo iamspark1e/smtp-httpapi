@@ -31,8 +31,8 @@ try {
   // Custom logger
   app.use(async (c, next) => {
     // health route doesn't need check
-    if (c.req.path === "/_health" || c.req.path === "/robots.txt") return await next();
-    if (c.req.path !== "/send" && c.req.path !== "/_verify") {
+    if (c.req.path === "/robots.txt") return await next();
+    if (c.req.path !== "/send" && c.req.path !== "/_verify" && c.req.path !== "/_health") {
       c.status(404);
       return c.text("Not Found")
     }
