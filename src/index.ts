@@ -1,17 +1,23 @@
 import { serve } from '@hono/node-server'
 import { readFileSync } from 'fs';
 import { Hono } from 'hono'
-import { logger } from 'hono/logger'
+// import { logger } from 'hono/logger'
 import yaml from 'yaml'
 import { GlobalConfigSchema, SendMailSchema, SendMailWithAttType } from './types.js';
 import * as v from 'valibot'
 import WrappedNodeMailer from './nodemailer.js';
 import { getRealRemoteIp } from './utils/access.js';
-import { customLogger } from './utils/logger.js';
+import { myWinstonLogger } from './utils/logger.js';
 import { removeNestedNullUndefined } from './utils/tool.js'
 
 const app = new Hono()
-app.use(logger(customLogger))
+app.use('*', async (c, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  // 使用 winston 创建的 logger 记录每个请求的详细信息
+  if(c.res.status === 200) myWinstonLogger.info(`[${c.req.method}] ${getRealRemoteIp(c) || "local (perhaps)"} ${c.req.path} - ${c.res.status} - ${ms}ms`);
+})
 
 try {
   const configRaw = readFileSync("./config.yml", { encoding: 'utf-8' });
@@ -25,7 +31,11 @@ try {
   // Custom logger
   app.use(async (c, next) => {
     // health route doesn't need check
-    if (c.req.path === "/_health") return await next();
+    if (c.req.path === "/robots.txt") return await next();
+    if (c.req.path !== "/send" && c.req.path !== "/_verify" && c.req.path !== "/_health") {
+      c.status(404);
+      return c.text("Not Found")
+    }
     // get client_ip
     let whitelist = configValidated.auth.whitelist;
     let secureCode = c.req.query('secure_code');
@@ -43,6 +53,46 @@ try {
         msg: "You are not allowed to access this endpoint"
       })
     }
+  })
+
+  // mount routes
+  app.get('/robots.txt', async (c) => {
+    return c.text(`User-agent: Baiduspider
+Disallow: /
+User-agent: Googlebot
+Disallow: /
+User-agent: Googlebot-Mobile
+Disallow: /
+User-agent: Googlebot-Image
+Disallow:/
+User-agent: Mediapartners-Google
+Disallow: /
+User-agent: Adsbot-Google
+Disallow: /
+User-agent:Feedfetcher-Google
+Disallow: /
+User-agent: Yahoo! Slurp
+Disallow: /
+User-agent: Yahoo! Slurp China
+Disallow: /
+User-agent: Yahoo!-AdCrawler
+Disallow: /
+User-agent: YoudaoBot
+Disallow: /
+User-agent: Sosospider
+Disallow: /
+User-agent: Sogou spider
+Disallow: /
+User-agent: Sogou web spider
+Disallow: /
+User-agent: MSNBot
+Disallow: /
+User-agent: ia_archiver
+Disallow: /
+User-agent: Tomato Bot
+Disallow: /
+User-agent: *
+Disallow: /`)
   })
 
   // mount routes
@@ -161,7 +211,7 @@ try {
     }
 
     // put a custom log
-    customLogger(`An Email was sent:
+    myWinstonLogger.info(`An Email was sent:
 from: ${email || "__default_transporter__"}
 to: ${adaptedData.to.join(", ")}
 ${adaptedData.cc && adaptedData.cc.length > 0 ? `cc: ${adaptedData.cc.join(", ")}` : ""}
