@@ -1,17 +1,23 @@
 import { serve } from '@hono/node-server'
 import { readFileSync } from 'fs';
 import { Hono } from 'hono'
-import { logger } from 'hono/logger'
+// import { logger } from 'hono/logger'
 import yaml from 'yaml'
 import { GlobalConfigSchema, SendMailSchema, SendMailWithAttType } from './types.js';
 import * as v from 'valibot'
 import WrappedNodeMailer from './nodemailer.js';
 import { getRealRemoteIp } from './utils/access.js';
-import { customLogger } from './utils/logger.js';
+import { myWinstonLogger } from './utils/logger.js';
 import { removeNestedNullUndefined } from './utils/tool.js'
 
 const app = new Hono()
-app.use(logger(customLogger))
+app.use('*', async (c, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  // 使用 winston 创建的 logger 记录每个请求的详细信息
+  if(c.res.status === 200) myWinstonLogger.info(`[${c.req.method}] ${getRealRemoteIp(c) || "local (perhaps)"} ${c.req.path} - ${c.res.status} - ${ms}ms`);
+})
 
 try {
   const configRaw = readFileSync("./config.yml", { encoding: 'utf-8' });
@@ -205,7 +211,7 @@ Disallow: /`)
     }
 
     // put a custom log
-    customLogger(`An Email was sent:
+    myWinstonLogger.info(`An Email was sent:
 from: ${email || "__default_transporter__"}
 to: ${adaptedData.to.join(", ")}
 ${adaptedData.cc && adaptedData.cc.length > 0 ? `cc: ${adaptedData.cc.join(", ")}` : ""}
