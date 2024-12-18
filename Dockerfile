@@ -25,6 +25,6 @@ USER hono
 EXPOSE 3000
 
 HEALTHCHECK --interval=5s --timeout=3s \
-  CMD curl -fs http://localhost:3000/robots.txt || exit 1
+  CMD curl --fail http://localhost:3000/robots.txt
 
 CMD ["node", "/app/dist/index.js"]
