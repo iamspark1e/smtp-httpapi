@@ -25,7 +25,11 @@ try {
   // Custom logger
   app.use(async (c, next) => {
     // health route doesn't need check
-    if (c.req.path === "/_health") return await next();
+    if (c.req.path === "/_health" || c.req.path === "/robots.txt") return await next();
+    if (c.req.path !== "/send" && c.req.path !== "/_verify") {
+      c.status(404);
+      return c.text("Not Found")
+    }
     // get client_ip
     let whitelist = configValidated.auth.whitelist;
     let secureCode = c.req.query('secure_code');
@@ -43,6 +47,46 @@ try {
         msg: "You are not allowed to access this endpoint"
       })
     }
+  })
+
+  // mount routes
+  app.get('/robots.txt', async (c) => {
+    return c.text(`User-agent: Baiduspider
+Disallow: /
+User-agent: Googlebot
+Disallow: /
+User-agent: Googlebot-Mobile
+Disallow: /
+User-agent: Googlebot-Image
+Disallow:/
+User-agent: Mediapartners-Google
+Disallow: /
+User-agent: Adsbot-Google
+Disallow: /
+User-agent:Feedfetcher-Google
+Disallow: /
+User-agent: Yahoo! Slurp
+Disallow: /
+User-agent: Yahoo! Slurp China
+Disallow: /
+User-agent: Yahoo!-AdCrawler
+Disallow: /
+User-agent: YoudaoBot
+Disallow: /
+User-agent: Sosospider
+Disallow: /
+User-agent: Sogou spider
+Disallow: /
+User-agent: Sogou web spider
+Disallow: /
+User-agent: MSNBot
+Disallow: /
+User-agent: ia_archiver
+Disallow: /
+User-agent: Tomato Bot
+Disallow: /
+User-agent: *
+Disallow: /`)
   })
 
   // mount routes
