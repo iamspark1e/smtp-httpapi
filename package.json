@@ -12,6 +12,7 @@
     "hono": "^4.6.2",
     "nodemailer": "^6.9.15",
     "valibot": "^0.42.1",
+    "winston": "^3.17.0",
     "yaml": "^2.5.1"
   },
   "devDependencies": {
