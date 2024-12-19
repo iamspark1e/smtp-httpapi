@@ -16,7 +16,7 @@ app.use('*', async (c, next) => {
   await next();
   const ms = Date.now() - start;
   // 使用 winston 创建的 logger 记录每个请求的详细信息
-  if(c.res.status === 200) myWinstonLogger.info(`[${c.req.method}] ${getRealRemoteIp(c) || "local (perhaps)"} ${c.req.path} - ${c.res.status} - ${ms}ms`);
+  if(c.res.status === 200 && getRealRemoteIp(c)) myWinstonLogger.info(`[${c.req.method}] ${getRealRemoteIp(c) || "local (perhaps)"} ${c.req.path} - ${c.res.status} - ${ms}ms`);
 })
 
 try {
